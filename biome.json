@@ -32,7 +32,15 @@
     }
   },
   "files": {
-    "includes": ["**", "!dist", "!node_modules", "!pnpm-lock.yaml"]
+    "includes": [
+      "**",
+      "!dist",
+      "!node_modules",
+      "!pnpm-lock.yaml",
+      "!pkg",
+      "!crates/**/target",
+      "!crates/**/pkg"
+    ]
   },
   "overrides": [
     {

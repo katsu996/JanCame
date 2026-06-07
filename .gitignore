@@ -1,5 +1,8 @@
 node_modules
 dist
+pkg
+crates/tile-efficiency-wasm/target
+crates/tile-efficiency-wasm/pkg
 .DS_Store
 *.local
 package-lock.json

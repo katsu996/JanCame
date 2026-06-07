@@ -1,34 +1,33 @@
 import { tileLabel } from '../efficiency/tiles.js';
+import type { FrameDimensions } from '../input/frame-source.js';
 import type { EfficiencyResult, RecognitionResult, RoiQuad } from '../types/index.js';
 
 export interface OverlayRendererOptions {
-  video: HTMLVideoElement;
   canvas: HTMLCanvasElement;
+  getDimensions: () => FrameDimensions;
 }
 
 export class OverlayRenderer {
-  private readonly video: HTMLVideoElement;
   private readonly canvas: HTMLCanvasElement;
+  private readonly getDimensions: () => FrameDimensions;
   private readonly context: CanvasRenderingContext2D;
   private recognition: RecognitionResult | null = null;
   private efficiency: EfficiencyResult | null = null;
   private roiQuad: RoiQuad | null = null;
 
   constructor(options: OverlayRendererOptions) {
-    this.video = options.video;
     this.canvas = options.canvas;
+    this.getDimensions = options.getDimensions;
     const context = this.canvas.getContext('2d');
     if (!context) throw new Error('Overlay canvas unavailable');
     this.context = context;
   }
 
-  resize(): void {
-    const width = this.video.clientWidth;
-    const height = this.video.clientHeight;
-    this.canvas.width = width;
-    this.canvas.height = height;
-    this.canvas.style.width = `${width}px`;
-    this.canvas.style.height = `${height}px`;
+  resize(displayWidth: number, displayHeight: number): void {
+    this.canvas.width = displayWidth;
+    this.canvas.height = displayHeight;
+    this.canvas.style.width = `${displayWidth}px`;
+    this.canvas.style.height = `${displayHeight}px`;
   }
 
   setRecognition(result: RecognitionResult | null): void {
@@ -43,8 +42,8 @@ export class OverlayRenderer {
     this.roiQuad = quad;
   }
 
-  render(): void {
-    this.resize();
+  render(displayWidth: number, displayHeight: number): void {
+    this.resize(displayWidth, displayHeight);
     this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
     if (this.roiQuad) {
@@ -94,8 +93,9 @@ export class OverlayRenderer {
   }
 
   private scaleBox(box: { x: number; y: number; w: number; h: number }) {
-    const scaleX = this.canvas.width / Math.max(1, this.video.videoWidth);
-    const scaleY = this.canvas.height / Math.max(1, this.video.videoHeight);
+    const source = this.getDimensions();
+    const scaleX = this.canvas.width / Math.max(1, source.width);
+    const scaleY = this.canvas.height / Math.max(1, source.height);
     return {
       x: box.x * scaleX,
       y: box.y * scaleY,
@@ -105,8 +105,9 @@ export class OverlayRenderer {
   }
 
   private scalePoint(point: { x: number; y: number }) {
-    const scaleX = this.canvas.width / Math.max(1, this.video.videoWidth);
-    const scaleY = this.canvas.height / Math.max(1, this.video.videoHeight);
+    const source = this.getDimensions();
+    const scaleX = this.canvas.width / Math.max(1, source.width);
+    const scaleY = this.canvas.height / Math.max(1, source.height);
     return { x: point.x * scaleX, y: point.y * scaleY };
   }
 }
