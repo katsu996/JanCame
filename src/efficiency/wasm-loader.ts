@@ -16,21 +16,7 @@ export async function loadWasmEfficiency(): Promise<WasmEfficiencyModule | null>
 
   try {
     const wasm = await import('../../pkg/tile-efficiency-wasm/tile_efficiency_wasm.js');
-    if (import.meta.env.VITEST) {
-      const [{ readFileSync }, { dirname, join }, { fileURLToPath }] = await Promise.all([
-        import('node:fs'),
-        import('node:path'),
-        import('node:url'),
-      ]);
-      const wasmDir = join(
-        dirname(fileURLToPath(import.meta.url)),
-        '../../pkg/tile-efficiency-wasm',
-      );
-      const wasmBytes = readFileSync(join(wasmDir, 'tile_efficiency_wasm_bg.wasm'));
-      await wasm.default(wasmBytes);
-    } else {
-      await wasm.default();
-    }
+    await wasm.default();
     wasmModule = wasm as unknown as WasmEfficiencyModule;
     return wasmModule;
   } catch (error) {
@@ -41,6 +27,12 @@ export async function loadWasmEfficiency(): Promise<WasmEfficiencyModule | null>
 
 export function getWasmEfficiencyModule(): WasmEfficiencyModule | null {
   return wasmModule;
+}
+
+/** @internal Vitest から WASM モジュールを注入する */
+export function setWasmEfficiencyModuleForTests(module: unknown): void {
+  wasmModule = module as WasmEfficiencyModule;
+  loadAttempted = true;
 }
 
 export function calculateEfficiencyWithWasm(

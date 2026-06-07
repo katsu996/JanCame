@@ -1,15 +1,14 @@
-import { existsSync } from 'node:fs';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { calcShanten, calculateEfficiency } from '../../src/efficiency/index.js';
 import { countsFromTiles } from '../../src/efficiency/tiles.js';
 import {
   calculateEfficiencyWithTypeScript,
   getWasmEfficiencyModule,
-  loadWasmEfficiency,
 } from '../../src/efficiency/wasm-loader.js';
 import type { TileId } from '../../src/types/index.js';
+import { isWasmBuilt, loadWasmForTests } from '../helpers/load-wasm.js';
 
-const wasmBuilt = existsSync('pkg/tile-efficiency-wasm/tile_efficiency_wasm.js');
+const wasmBuilt = isWasmBuilt();
 
 const fixtures: TileId[][] = [
   ['1m', '2m', '3m', '4m', '5m', '6m', '7p', '8p', '9p', '5s', '5s', '5s', '9m'],
@@ -21,7 +20,7 @@ const fixtures: TileId[][] = [
 describe('wasm efficiency', () => {
   beforeAll(async () => {
     if (wasmBuilt) {
-      await loadWasmEfficiency();
+      await loadWasmForTests();
     }
   });
 
