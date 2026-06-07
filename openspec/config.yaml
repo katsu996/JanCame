@@ -1,20 +1,22 @@
 schema: spec-driven
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+context: |
+  プロジェクト: JanCame — ブラウザカメラから麻雀手牌を認識し、牌効率（向聴・受け入れ）をリアルタイム表示する SPA
+  技術スタック: Vite + TypeScript, OpenCV.js, Canvas 2D, 静的ホスティング（サーバーレス）
+  牌表記: 萬子 m, 筒子 p, 索子 s, 字牌 E/S/W/N/P/F/C（東南西北白發中）
+  ルール前提: リーチ麻雀・一般形（4面子1雀頭）、MVP は手牌のみ（河・他家は非対象）
+  開発方針: DL モデルは使わず OpenCV.js テンプレートマッチング。牌効率は Phase1 TypeScript、Phase2 WASM 化
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+rules:
+  proposal:
+    - 日本語で記述する
+    - Non-goals セクションを必ず含める
+  specs:
+    - Given/When/Then 形式でシナリオを記述する
+    - 実装詳細（ライブラリ名等）は design.md に留める
+  design:
+    - モジュール間インターフェースを TypeScript 型で示す
+    - 複雑なフローには Mermaid 図を含める
+  tasks:
+    - 2時間以内で完了できる粒度に分割する
+    - Phase 順にグループ化する
