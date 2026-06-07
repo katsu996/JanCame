@@ -6,6 +6,9 @@ context: |
   牌表記: 萬子 m, 筒子 p, 索子 s, 字牌 E/S/W/N/P/F/C（東南西北白發中）
   ルール前提: リーチ麻雀・一般形（4面子1雀頭）、MVP は手牌のみ（河・他家は非対象）
   開発方針: DL モデルは使わず OpenCV.js テンプレートマッチング。牌効率は Phase1 TypeScript、Phase2 WASM 化
+  パッケージマネージャ: pnpm
+  Lint/Format: Biome
+  本番デプロイ: GitHub Pages (https://katsu996.github.io/JanCame/)
 
 rules:
   proposal:
