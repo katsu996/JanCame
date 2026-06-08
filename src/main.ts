@@ -7,6 +7,7 @@ import { loadOpenCv } from './recognition/opencv-loader.js';
 import { runRecognitionPipeline } from './recognition/pipeline.js';
 import { defaultRoiQuad } from './recognition/roi.js';
 import { loadTileTemplates } from './recognition/templates.js';
+import { RecognitionWorkerClient } from './recognition/worker-client.js';
 import type { RecognitionResult, RoiQuad, TileId } from './types/index.js';
 import { OverlayRenderer } from './ui/canvas.js';
 import {
@@ -49,6 +50,8 @@ const overlay = new OverlayRenderer({
 
 let frameCapture: FrameCapture | null = null;
 let cvModule: OpenCvModule | null = null;
+let useRecognitionWorker = false;
+const pinnedSlots = new Map<number, TileId>();
 const templates = await loadTileTemplates();
 let roiQuad: RoiQuad = defaultRoiQuad(1280, 720);
 let recognitionEnabled = true;
@@ -62,8 +65,17 @@ correctionHost.className = 'panel-section';
 panelRoot.appendChild(correctionHost);
 
 const correctionPanel = new CorrectionPanel(correctionHost, (index, tileId) => {
-  if (!latestRecognition) return;
-  manualTiles[index] = tileId;
+  pinnedSlots.set(index, tileId);
+  if (latestRecognition) {
+    latestRecognition = mergePinnedTiles(latestRecognition);
+    manualTiles = tilesForEfficiency(latestRecognition);
+    overlay.setRecognition(latestRecognition);
+    correctionPanel.render(
+      latestRecognition.tiles.map((tile, tileIndex) => ({ index: tileIndex, id: tile.id })),
+    );
+  } else {
+    manualTiles[index] = tileId;
+  }
   updateEfficiencyFromManual();
 });
 
@@ -161,7 +173,7 @@ async function bootstrap(): Promise<void> {
   window.addEventListener('offline', () => showOfflineBanner(appRoot, true));
   showOfflineBanner(appRoot, !navigator.onLine);
 
-  void loadOpenCvInBackground();
+  void initRecognitionEngine();
   await startCameraInput();
   enableControls();
   window.requestAnimationFrame(renderLoop);
@@ -172,13 +184,55 @@ function enableControls(): void {
   setControlsEnabled(true, [cameraToggle, recognitionToggle, imageInput, clearImageButton]);
 }
 
-async function loadOpenCvInBackground(): Promise<void> {
-  setLoadingVisible(loading, true);
-  setControlsEnabled(false, [cameraToggle, recognitionToggle, imageInput, clearImageButton]);
-  cvModule = await loadOpenCv((message) => {
+const recognitionWorker = new RecognitionWorkerClient({
+  onResult: (_frameId, result) => {
+    applyRecognitionResult(result);
+  },
+  onError: (message) => {
+    console.warn('[JanCame]', message);
+  },
+  onProgress: (message) => {
     const text = loading.querySelector('p');
     if (text) text.textContent = message;
-  });
+  },
+});
+
+function mergePinnedTiles(result: RecognitionResult): RecognitionResult {
+  return {
+    ...result,
+    tiles: result.tiles.map((tile, index) => {
+      const pinned = pinnedSlots.get(index);
+      if (!pinned) return tile;
+      return { ...tile, id: pinned, confidence: 1 };
+    }),
+  };
+}
+
+function tilesForEfficiency(result: RecognitionResult): TileId[] {
+  return result.tiles.map((tile) => tile.id).filter((id): id is TileId => id !== null);
+}
+
+function applyRecognitionResult(result: RecognitionResult): void {
+  latestRecognition = mergePinnedTiles(result);
+  manualTiles = tilesForEfficiency(latestRecognition);
+  correctionPanel.render(latestRecognition.tiles.map((tile, index) => ({ index, id: tile.id })));
+  updateEfficiency(manualTiles);
+  overlay.setRecognition(latestRecognition);
+  renderViewport();
+}
+
+async function initRecognitionEngine(): Promise<void> {
+  setLoadingVisible(loading, true);
+  setControlsEnabled(false, [cameraToggle, recognitionToggle, imageInput, clearImageButton]);
+
+  useRecognitionWorker = await recognitionWorker.init();
+  if (!useRecognitionWorker) {
+    cvModule = await loadOpenCv((message) => {
+      const text = loading.querySelector('p');
+      if (text) text.textContent = message;
+    });
+  }
+
   setLoadingVisible(loading, false);
   if (controlsEnabled) {
     setControlsEnabled(true, [cameraToggle, recognitionToggle, imageInput, clearImageButton]);
@@ -241,19 +295,20 @@ async function handleImageClear(): Promise<void> {
 }
 
 function processFrame(imageData: ImageData): void {
+  const frameId = frameCapture?.getFrameId() ?? 0;
+
+  if (useRecognitionWorker && recognitionWorker.isReady()) {
+    recognitionWorker.submitFrame(frameId, imageData, roiQuad);
+    return;
+  }
+
   const result = runRecognitionPipeline(imageData, {
     cv: cvModule,
     templates,
     quad: roiQuad,
-    frameId: frameCapture?.getFrameId() ?? 0,
+    frameId,
   });
-
-  latestRecognition = result;
-  manualTiles = result.tiles.map((tile) => tile.id).filter((id): id is TileId => id !== null);
-  correctionPanel.render(result.tiles.map((tile, index) => ({ index, id: tile.id })));
-  updateEfficiency(manualTiles);
-  overlay.setRecognition(result);
-  renderViewport();
+  applyRecognitionResult(result);
 }
 
 function updateEfficiency(tiles: TileId[]): void {

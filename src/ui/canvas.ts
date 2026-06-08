@@ -1,5 +1,6 @@
 import { tileLabel } from '../efficiency/tiles.js';
 import type { FrameDimensions } from '../input/frame-source.js';
+import { MATCH_THRESHOLD } from '../recognition/pipeline.js';
 import type { EfficiencyResult, RecognitionResult, RoiQuad } from '../types/index.js';
 
 export interface OverlayRendererOptions {
@@ -56,13 +57,18 @@ export class OverlayRenderer {
 
     for (const tile of this.recognition.tiles) {
       const { x, y, w, h } = this.scaleBox(tile.boundingBox);
-      this.context.strokeStyle = tile.id === recommendedTile ? '#ff4444' : '#00ff88';
+      const isLowConfidence = !tile.id || tile.confidence < MATCH_THRESHOLD;
+      this.context.strokeStyle = isLowConfidence
+        ? '#facc15'
+        : tile.id === recommendedTile
+          ? '#ff4444'
+          : '#00ff88';
       this.context.lineWidth = 2;
       this.context.strokeRect(x, y, w, h);
 
-      const label = tile.id ? tileLabel(tile.id) : '?';
+      const label = tile.id ? `${tileLabel(tile.id)} ${Math.round(tile.confidence * 100)}%` : '?';
       this.context.fillStyle = 'rgba(0, 0, 0, 0.65)';
-      this.context.fillRect(x, y - 22, Math.max(36, label.length * 10), 20);
+      this.context.fillRect(x, y - 22, Math.max(52, label.length * 7), 20);
       this.context.fillStyle = '#fff';
       this.context.font = '12px sans-serif';
       this.context.fillText(label, x + 4, y - 8);

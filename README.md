@@ -9,7 +9,7 @@
 - Web カメラによるライブ映像表示（ON/OFF 切り替え可能）
 - テスト用画像アップロード（JPEG/PNG）
 - 手牌領域（ROI）の手動調整
-- OpenCV.js による輪郭検出 + テンプレートマッチング（34種牌）
+- OpenCV.js による輪郭検出 + PNG テンプレートマッチング（34種牌、Web Worker）
 - Rust WASM による向聴数・打牌候補・受け入れ牌の計算（失敗時 TypeScript フォールバック）
 - 映像オーバーレイ（牌ラベル・「切」マーク）
 - 認識結果の手動補正
@@ -36,6 +36,7 @@ pnpm build:wasm
 |----------|------|
 | `pnpm dev` | 開発サーバー起動 |
 | `pnpm build` | 本番ビルド（`dist/`、GitHub Pages 用 base path 付き） |
+| `pnpm generate:templates` | 牌テンプレート PNG 34 枚を再生成 |
 | `pnpm build:wasm` | 牌効率 WASM のみビルド（`pkg/tile-efficiency-wasm/`） |
 | `pnpm preview` | ビルド成果物のプレビュー（開発用 `/` base） |
 | `pnpm preview:pages` | GitHub Pages と同じ `/JanCame/` base でプレビュー |
@@ -50,6 +51,16 @@ pnpm build:wasm
 3. 認識された牌ラベルと向聴数を確認
 4. 認識ミスは下部パネルの「手動補正」で修正
 5. 「切」マークと打牌候補リストから最適打牌を確認
+
+### 牌テンプレート
+
+認識精度向上のため、`public/assets/tiles/` に 34 種 PNG テンプレートを同梱しています。
+
+```bash
+pnpm generate:templates
+```
+
+自分の牌セットに合わせる場合は、各牌を 48×64 px の PNG として `{id}.png`（例: `1m.png`）で同ディレクトリに配置してください。詳細は `public/assets/tiles/README.md` を参照。
 
 ### カメラ ON/OFF
 

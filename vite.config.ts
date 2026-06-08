@@ -43,7 +43,7 @@ export default defineConfig(({ mode }) => {
           ],
         },
         workbox: {
-          globPatterns: ['**/*.{js,css,html,ico,svg,wasm}'],
+          globPatterns: ['**/*.{js,css,html,ico,svg,wasm,png}'],
           navigateFallback: `${base}index.html`,
           runtimeCaching: [
             {
@@ -65,9 +65,13 @@ export default defineConfig(({ mode }) => {
       }),
     ],
     test: {
-      environment: 'node',
+      environment: 'happy-dom',
       include: ['tests/**/*.test.ts'],
-      environmentMatchGlobs: [['tests/input/**', 'happy-dom']],
+      environmentMatchGlobs: [
+        ['tests/efficiency/**', 'node'],
+        ['tests/recognition/**', 'node'],
+        ['tests/helpers/**', 'node'],
+      ],
     },
     server: {
       fs: {

@@ -1,15 +1,39 @@
 import { ALL_TILES, tileUnicode } from '../efficiency/tiles.js';
 import type { TileId } from '../types/index.js';
+import type { CvMat } from './opencv.d.js';
 
-const TEMPLATE_WIDTH = 48;
-const TEMPLATE_HEIGHT = 64;
+export const TEMPLATE_WIDTH = 48;
+export const TEMPLATE_HEIGHT = 64;
+export const TILE_ASSET_BASE = `${import.meta.env.BASE_URL}assets/tiles`;
+
+export type TileTemplateSource = 'asset' | 'generated';
 
 export interface TileTemplate {
   id: TileId;
   canvas: HTMLCanvasElement;
+  source: TileTemplateSource;
+  surface?: import('./match.js').PixelSurface;
 }
 
-function drawTemplate(tile: TileId): HTMLCanvasElement {
+const templateMatCache = new WeakMap<TileTemplate, CvMat>();
+
+export function getTemplateMat(template: TileTemplate): CvMat | undefined {
+  return templateMatCache.get(template);
+}
+
+export function setTemplateMat(template: TileTemplate, mat: CvMat): void {
+  templateMatCache.set(template, mat);
+}
+
+export function clearTemplateMatCache(templates: TileTemplate[]): void {
+  for (const template of templates) {
+    const mat = templateMatCache.get(template);
+    mat?.delete();
+    templateMatCache.delete(template);
+  }
+}
+
+function drawGeneratedTemplate(tile: TileId): HTMLCanvasElement {
   const canvas = document.createElement('canvas');
   canvas.width = TEMPLATE_WIDTH;
   canvas.height = TEMPLATE_HEIGHT;
@@ -36,17 +60,75 @@ function drawTemplate(tile: TileId): HTMLCanvasElement {
   return canvas;
 }
 
+async function loadAssetTemplate(tile: TileId): Promise<TileTemplate | null> {
+  try {
+    const response = await fetch(`${TILE_ASSET_BASE}/${tile}.png`);
+    if (!response.ok) return null;
+
+    const blob = await response.blob();
+    const bitmap = await createImageBitmap(blob);
+    const canvas = document.createElement('canvas');
+    canvas.width = TEMPLATE_WIDTH;
+    canvas.height = TEMPLATE_HEIGHT;
+    const context = canvas.getContext('2d');
+    if (!context) return null;
+
+    context.drawImage(bitmap, 0, 0, TEMPLATE_WIDTH, TEMPLATE_HEIGHT);
+    bitmap.close();
+    return { id: tile, canvas, source: 'asset' };
+  } catch {
+    return null;
+  }
+}
+
 export function generateTileTemplates(): TileTemplate[] {
   return ALL_TILES.map((id) => ({
     id,
-    canvas: drawTemplate(id),
+    canvas: drawGeneratedTemplate(id),
+    source: 'generated' as const,
   }));
 }
 
 export async function loadTileTemplates(): Promise<TileTemplate[]> {
-  return generateTileTemplates();
+  const templates: TileTemplate[] = [];
+  let assetCount = 0;
+
+  for (const id of ALL_TILES) {
+    const assetTemplate = await loadAssetTemplate(id);
+    if (assetTemplate) {
+      templates.push(assetTemplate);
+      assetCount++;
+      continue;
+    }
+
+    templates.push({
+      id,
+      canvas: drawGeneratedTemplate(id),
+      source: 'generated',
+    });
+  }
+
+  if (assetCount < ALL_TILES.length) {
+    console.warn(
+      `[JanCame] Tile template assets incomplete (${assetCount}/${ALL_TILES.length}). Using generated fallback for missing tiles.`,
+    );
+  }
+
+  return templates;
 }
 
 export function getTemplateSize(): { width: number; height: number } {
   return { width: TEMPLATE_WIDTH, height: TEMPLATE_HEIGHT };
+}
+
+export async function loadImageFromUrl(url: string): Promise<HTMLCanvasElement> {
+  const response = await fetch(url);
+  const blob = await response.blob();
+  const bitmap = await createImageBitmap(blob);
+  const canvas = document.createElement('canvas');
+  canvas.width = bitmap.width;
+  canvas.height = bitmap.height;
+  canvas.getContext('2d')!.drawImage(bitmap, 0, 0);
+  bitmap.close();
+  return canvas;
 }

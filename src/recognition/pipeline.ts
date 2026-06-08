@@ -1,9 +1,9 @@
 import type { RecognitionResult, RecognizedTile, RoiQuad } from '../types/index.js';
-import { matchTileImage, matchTileImageSimple } from './match.js';
+import { MATCH_THRESHOLD, matchTileImage, matchTileImageSimple } from './match.js';
 import type { OpenCvModule } from './opencv.d.js';
 import { detectTileLikeContours, toGrayMat } from './preprocess.js';
 import { extractRoiImageData, roiBounds } from './roi.js';
-import { estimateTileCount, splitIntoTileSlots } from './split.js';
+import { estimateTileCount, splitByContours, splitIntoTileSlots } from './split.js';
 import type { TileTemplate } from './templates.js';
 
 export interface RecognitionPipelineOptions {
@@ -12,6 +12,8 @@ export interface RecognitionPipelineOptions {
   quad: RoiQuad;
   frameId: number;
 }
+
+export { MATCH_THRESHOLD };
 
 export function runRecognitionPipeline(
   imageData: ImageData,
@@ -23,16 +25,23 @@ export function runRecognitionPipeline(
     x: bounds.w / roiImage.width,
     y: bounds.h / roiImage.height,
   };
+  const screenOffset = { x: bounds.x, y: bounds.y };
 
-  let tileCount = 14;
+  let slots = splitIntoTileSlots(roiImage, 14, screenOffset, screenScale);
+
   if (options.cv) {
     const gray = toGrayMat(options.cv, roiImage);
     const contours = detectTileLikeContours(options.cv, gray);
+    const contourSlots = splitByContours(roiImage, contours, screenOffset, screenScale);
+    if (contourSlots) {
+      slots = contourSlots;
+    } else {
+      const tileCount = estimateTileCount(contours.length, 14);
+      slots = splitIntoTileSlots(roiImage, tileCount, screenOffset, screenScale);
+    }
     gray.delete();
-    tileCount = estimateTileCount(contours.length, 14);
   }
 
-  const slots = splitIntoTileSlots(roiImage, tileCount, { x: bounds.x, y: bounds.y }, screenScale);
   const tiles: RecognizedTile[] = slots.map((slot) => {
     const match = options.cv
       ? matchTileImage(options.cv, slot.image, options.templates)

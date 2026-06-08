@@ -1,4 +1,5 @@
 import type { Point, RoiQuad } from '../types/index.js';
+import { createEmptyImageData } from './image-data.js';
 
 export function defaultRoiQuad(width: number, height: number): RoiQuad {
   const marginX = width * 0.05;
@@ -22,7 +23,7 @@ export function extractRoiImageData(imageData: ImageData, quad: RoiQuad): ImageD
   const width = Math.max(1, maxX - minX);
   const height = Math.max(1, maxY - minY);
 
-  const output = new ImageData(width, height);
+  const output = createEmptyImageData(width, height);
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const sourceX = minX + x;

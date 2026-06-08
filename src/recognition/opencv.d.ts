@@ -24,11 +24,21 @@ export interface OpenCvModule {
   warpPerspective(src: CvMat, dst: CvMat, matrix: CvMat, size: CvSize): void;
   matchTemplate(src: CvMat, templ: CvMat, dst: CvMat, method: number): void;
   minMaxLoc(src: CvMat): { minVal: number; maxVal: number; minLoc: CvPoint; maxLoc: CvPoint };
+  equalizeHist(src: CvMat, dst: CvMat): void;
+  resize(
+    src: CvMat,
+    dst: CvMat,
+    dsize: CvSize,
+    fx?: number,
+    fy?: number,
+    interpolation?: number,
+  ): void;
   MatVector: new () => CvMatVector;
   COLOR_RGBA2GRAY: number;
   RETR_EXTERNAL: number;
   CHAIN_APPROX_SIMPLE: number;
   TM_CCOEFF_NORMED: number;
+  INTER_LINEAR: number;
   Size: new (width: number, height: number) => CvSize;
   Point: new (x: number, y: number) => CvPoint;
   delete(...mats: unknown[]): void;

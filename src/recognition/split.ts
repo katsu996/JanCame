@@ -1,4 +1,5 @@
 import type { BoundingBox } from '../types/index.js';
+import { createEmptyImageData } from './image-data.js';
 
 export function splitIntoTileSlots(
   roiImage: ImageData,
@@ -28,14 +29,35 @@ export function splitIntoTileSlots(
   return slots;
 }
 
-function cropImageData(
+export function splitByContours(
+  roiImage: ImageData,
+  contours: Array<{ x: number; y: number; width: number; height: number }>,
+  screenOffset: { x: number; y: number },
+  screenScale: { x: number; y: number },
+): Array<{ image: ImageData; boundingBox: BoundingBox }> | null {
+  if (contours.length < 10 || contours.length > 14) {
+    return null;
+  }
+
+  return contours.map((rect) => ({
+    image: cropImageData(roiImage, rect.x, rect.y, rect.width, rect.height),
+    boundingBox: {
+      x: screenOffset.x + rect.x * screenScale.x,
+      y: screenOffset.y + rect.y * screenScale.y,
+      w: rect.width * screenScale.x,
+      h: rect.height * screenScale.y,
+    },
+  }));
+}
+
+export function cropImageData(
   source: ImageData,
   x: number,
   y: number,
   width: number,
   height: number,
 ): ImageData {
-  const output = new ImageData(width, height);
+  const output = createEmptyImageData(width, height);
   for (let row = 0; row < height; row++) {
     for (let col = 0; col < width; col++) {
       const sourceIndex = ((y + row) * source.width + (x + col)) * 4;

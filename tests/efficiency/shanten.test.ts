@@ -1,3 +1,6 @@
+/**
+ * @vitest-environment node
+ */
 import { describe, expect, it } from 'vitest';
 import { calcShanten, calculateEfficiency } from '../../src/efficiency/index.js';
 import { countsFromTiles } from '../../src/efficiency/tiles.js';
