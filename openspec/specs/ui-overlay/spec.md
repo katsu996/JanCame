@@ -40,6 +40,22 @@ The system SHALL display a confidence indicator for each recognized tile on the 
 - **THEN** the slot uses a distinct highlight color (e.g. yellow border)
 - **AND** the label shows "?"
 
+### Requirement: 検証用デバッグ表示
+
+The system SHALL show optional debug metrics on the overlay or panel to support device verification.
+
+#### Scenario: 処理時間の表示
+
+- **GIVEN** debug mode is enabled
+- **WHEN** recognition completes a frame
+- **THEN** the last frame processing time is displayed in the UI
+
+#### Scenario: 認識枚数の表示
+
+- **GIVEN** debug mode is enabled
+- **WHEN** recognition results are rendered
+- **THEN** the count of recognized tiles versus total slots is displayed
+
 ### Requirement: 牌効率パネル
 
 The system SHALL display current shanten and a sorted list of discard options with ukeire details in a side or bottom panel.
