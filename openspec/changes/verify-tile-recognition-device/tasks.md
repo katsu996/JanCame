@@ -2,9 +2,9 @@
 
 ## 1. 検証準備
 
-- [ ] 1.1 `docs/verification/tile-recognition-device.md` — チェックリスト・記録表・推奨環境
-- [ ] 1.2 `src/main.ts` / UI — `?debug=1` 時に処理時間・認識枚数を表示
-- [ ] 1.3 `README.md` — 実機検証手順へのリンク追記
+- [x] 1.1 `docs/verification/tile-recognition-device.md` — チェックリスト・記録表・推奨環境
+- [x] 1.2 `src/main.ts` / UI — `?debug=1` 時に処理時間・認識枚数を表示
+- [x] 1.3 `README.md` — 実機検証手順へのリンク追記
 
 ## 2. 実機確認（7.1 認識率）
 
@@ -22,4 +22,4 @@
 - [ ] 4.1 認識率未達 — `public/assets/tiles/` 実牌 PNG 差し替え or `MATCH_THRESHOLD` 調整
 - [ ] 4.2 性能未達 — Worker / ROI 送信サイズ / フレーム間引きのボトルネック修正
 - [ ] 4.3 再検証 — 2.x / 3.x を再実行しチェックリストを完了
-- [ ] 4.4 `pnpm lint` / `pnpm test` / `pnpm build` 通過確認（コード変更がある場合）
+- [x] 4.4 `pnpm lint` / `pnpm test` / `pnpm build` 通過確認（コード変更がある場合）

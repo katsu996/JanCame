@@ -17,6 +17,7 @@ import {
   updateInputModeLabel,
 } from './ui/controls.js';
 import { CorrectionPanel } from './ui/correction.js';
+import { countRecognizedTiles, DebugMetricsPanel } from './ui/debug-metrics.js';
 import {
   EfficiencyPanel,
   hideCameraError,
@@ -24,6 +25,7 @@ import {
   showCameraError,
 } from './ui/panel.js';
 import { RoiEditor } from './ui/roi-editor.js';
+import { isDebugMode } from './util/debug-mode.js';
 
 const appRoot = document.querySelector<HTMLElement>('#app')!;
 const video = document.querySelector<HTMLVideoElement>('#camera-video')!;
@@ -59,6 +61,8 @@ let controlsEnabled = false;
 let latestRecognition: RecognitionResult | null = null;
 let manualTiles: TileId[] = [];
 const calculateEfficiency = initEfficiencyEngine();
+const debugMetrics = new DebugMetricsPanel(appRoot);
+debugMetrics.setVisible(isDebugMode());
 
 const correctionHost = document.createElement('section');
 correctionHost.className = 'panel-section';
@@ -185,8 +189,8 @@ function enableControls(): void {
 }
 
 const recognitionWorker = new RecognitionWorkerClient({
-  onResult: (_frameId, result) => {
-    applyRecognitionResult(result);
+  onResult: (_frameId, result, timingMs) => {
+    applyRecognitionResult(result, timingMs, 'worker');
   },
   onError: (message) => {
     console.warn('[JanCame]', message);
@@ -212,12 +216,24 @@ function tilesForEfficiency(result: RecognitionResult): TileId[] {
   return result.tiles.map((tile) => tile.id).filter((id): id is TileId => id !== null);
 }
 
-function applyRecognitionResult(result: RecognitionResult): void {
+function applyRecognitionResult(
+  result: RecognitionResult,
+  timingMs?: number,
+  pipeline?: 'worker' | 'main',
+): void {
   latestRecognition = mergePinnedTiles(result);
   manualTiles = tilesForEfficiency(latestRecognition);
   correctionPanel.render(latestRecognition.tiles.map((tile, index) => ({ index, id: tile.id })));
   updateEfficiency(manualTiles);
   overlay.setRecognition(latestRecognition);
+  if (isDebugMode() && timingMs !== undefined) {
+    debugMetrics.update({
+      lastFrameMs: timingMs,
+      recognizedCount: countRecognizedTiles(latestRecognition),
+      totalSlots: latestRecognition.tiles.length,
+      pipeline: pipeline ?? (useRecognitionWorker ? 'worker' : 'main'),
+    });
+  }
   renderViewport();
 }
 
@@ -302,13 +318,14 @@ function processFrame(imageData: ImageData): void {
     return;
   }
 
+  const started = performance.now();
   const result = runRecognitionPipeline(imageData, {
     cv: cvModule,
     templates,
     quad: roiQuad,
     frameId,
   });
-  applyRecognitionResult(result);
+  applyRecognitionResult(result, performance.now() - started, 'main');
 }
 
 function updateEfficiency(tiles: TileId[]): void {

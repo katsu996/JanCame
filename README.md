@@ -62,6 +62,10 @@ pnpm generate:templates
 
 自分の牌セットに合わせる場合は、各牌を 48×64 px の PNG として `{id}.png`（例: `1m.png`）で同ディレクトリに配置してください。詳細は `public/assets/tiles/README.md` を参照。
 
+### 実機検証
+
+牌認識の受け入れ確認（認識率 10/14 以上・500 ms 以内など）は [docs/verification/tile-recognition-device.md](docs/verification/tile-recognition-device.md) を参照してください。検証時は URL に `?debug=1` を付けると処理時間と認識枚数が表示されます。
+
 ### カメラ ON/OFF
 
 ヘッダーの **カメラ** ボタンでストリームの開始・停止を切り替えられます。カメラ OFF 中も **認識** ボタンは独立して動作します（画像モードで利用可能）。
