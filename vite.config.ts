@@ -1,4 +1,6 @@
 /// <reference types="vitest/config" />
+import tailwindcss from '@tailwindcss/vite';
+import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
@@ -10,11 +12,18 @@ export default defineConfig(({ mode }) => {
 
   return {
     base,
+    resolve: {
+      alias: {
+        '@': '/src',
+      },
+    },
     build: {
       target: 'es2022',
       outDir: 'dist',
     },
     plugins: [
+      tailwindcss(),
+      react(),
       VitePWA({
         registerType: 'autoUpdate',
         includeAssets: ['icon.svg', '.nojekyll'],
@@ -22,8 +31,8 @@ export default defineConfig(({ mode }) => {
           name: 'JanCame',
           short_name: 'JanCame',
           description: 'カメラ映像から麻雀手牌を認識し、牌効率を表示する Web アプリ',
-          theme_color: '#1a1a2e',
-          background_color: '#1a1a2e',
+          theme_color: '#09090b',
+          background_color: '#09090b',
           display: 'standalone',
           start_url: base,
           scope: base,

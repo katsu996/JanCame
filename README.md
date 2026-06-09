@@ -110,6 +110,9 @@ pnpm preview:pages
 - Vite 8 + TypeScript 5.9
 - pnpm 10
 - Biome 2
+- React 19 + React DOM
+- shadcn/ui + Tailwind CSS v4
+- lucide-react（アイコン）
 - OpenCV.js（輪郭検出）
 - Rust WASM（牌効率、`wasm-pack`）
 - vite-plugin-pwa

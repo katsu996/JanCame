@@ -1,59 +1,15 @@
 <!doctype html>
-<html lang="ja">
+<html lang="ja" class="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#1a1a2e" />
+    <meta name="theme-color" content="#09090b" />
     <meta name="description" content="カメラ映像から麻雀手牌を認識し、牌効率を表示する Web アプリ" />
     <title>JanCame</title>
-    <link rel="stylesheet" href="/src/style.css" />
+    <link rel="stylesheet" href="/src/index.css" />
   </head>
   <body>
-    <div id="app">
-      <header class="header">
-        <div class="header-title">
-          <h1>JanCame</h1>
-          <p id="input-mode-label" class="input-mode-label">入力: カメラ</p>
-        </div>
-        <div class="header-controls">
-          <label class="toggle">
-            <input id="camera-toggle" type="checkbox" checked />
-            <span>カメラ ON</span>
-          </label>
-          <label class="toggle">
-            <input id="recognition-toggle" type="checkbox" checked />
-            <span>認識 ON</span>
-          </label>
-          <label class="file-button">
-            <input id="image-input" type="file" accept="image/jpeg,image/png" hidden />
-            <span>画像を選択…</span>
-          </label>
-          <button id="clear-image-button" type="button" class="secondary-button" hidden>
-            画像クリア
-          </button>
-        </div>
-      </header>
-      <main class="main">
-        <section class="camera-section">
-          <div id="camera-error" class="camera-error hidden"></div>
-          <div id="loading" class="loading hidden">
-            <div class="spinner"></div>
-            <p>OpenCV.js を読み込み中…</p>
-          </div>
-          <div id="viewport" class="viewport">
-            <video id="camera-video" autoplay playsinline muted></video>
-            <canvas id="preview-canvas"></canvas>
-            <canvas id="overlay-canvas"></canvas>
-            <div id="roi-editor" class="roi-editor"></div>
-            <div id="camera-placeholder" class="camera-placeholder hidden">
-              <p>カメラ OFF</p>
-              <p class="placeholder-hint">画像を選択するか、カメラを ON にしてください</p>
-            </div>
-          </div>
-        </section>
-        <aside id="panel" class="panel"></aside>
-      </main>
-    </div>
-    <script type="module" src="/src/main.ts"></script>
+    <div id="app"></div>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
