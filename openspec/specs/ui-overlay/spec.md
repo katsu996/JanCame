@@ -8,7 +8,7 @@
 
 ### Requirement: カメラ映像オーバーレイ
 
-The system SHALL render recognition labels and discard recommendations on top of the live camera feed using Canvas.
+The system SHALL render recognition labels and discard recommendations on top of the live camera feed using Canvas, within a shadcn-styled viewport container.
 
 #### Scenario: 牌ラベル表示
 
@@ -42,7 +42,7 @@ The system SHALL display a confidence indicator for each recognized tile on the 
 
 ### Requirement: 検証用デバッグ表示
 
-The system SHALL show optional debug metrics on the overlay or panel to support device verification.
+The system SHALL show optional debug metrics in a shadcn Card when debug mode is enabled.
 
 #### Scenario: 処理時間の表示
 
@@ -54,11 +54,11 @@ The system SHALL show optional debug metrics on the overlay or panel to support 
 
 - **GIVEN** debug mode is enabled
 - **WHEN** recognition results are rendered
-- **THEN** the count of recognized tiles versus total slots is displayed
+- **THEN** the count of recognized tiles is displayed
 
 ### Requirement: 牌効率パネル
 
-The system SHALL display current shanten and a sorted list of discard options with ukeire details in a side or bottom panel.
+The system SHALL display current shanten and a sorted list of discard options with ukeire details in a shadcn Card-based side or bottom panel.
 
 #### Scenario: 状態表示
 
@@ -86,13 +86,13 @@ The system SHOULD allow the user to manually correct recognized tile IDs when re
 
 ### Requirement: 手動補正 UX 改善
 
-The system SHALL provide a quick tile picker for correcting unrecognized or wrong slots.
+The system SHALL provide a quick tile picker for correcting unrecognized or wrong slots using shadcn Button and Sheet or Dialog components.
 
 #### Scenario: スロットタップ補正
 
 - **GIVEN** a slot shows "?" or an incorrect tile
 - **WHEN** the user taps the slot in the correction panel
-- **THEN** a grid of 34 tile options is shown
+- **THEN** a grid of 34 tile options is shown in a shadcn overlay
 - **AND** selecting a tile updates the hand and re-runs efficiency calculation
 
 #### Scenario: 補正後の安定表示
@@ -103,35 +103,35 @@ The system SHALL provide a quick tile picker for correcting unrecognized or wron
 
 ### Requirement: レスポンシブレイアウト
 
-The system SHALL support mobile portrait orientation as the primary layout.
+The system SHALL support mobile portrait orientation as the primary layout using Tailwind responsive utilities.
 
 #### Scenario: スマホ縦画面
 
 - **GIVEN** the viewport is a mobile phone in portrait mode
 - **WHEN** the app renders
 - **THEN** the camera feed occupies the main area
-- **AND** the efficiency panel is accessible without obscuring the entire video
+- **AND** the efficiency panel is accessible below the viewport without obscuring the entire video
 
 ### Requirement: カメラ ON/OFF ボタン
 
-The system SHALL display a camera ON/OFF button in the header that controls the MediaStream independently of the recognition toggle.
+The system SHALL display camera and recognition toggles in the header using shadcn Switch and Button components.
 
 #### Scenario: ボタン表示
 
 - **GIVEN** the app is loaded
 - **WHEN** the header renders
-- **THEN** a camera ON/OFF control is visible alongside the recognition toggle
+- **THEN** camera and recognition controls are visible with consistent shadcn styling
 
 #### Scenario: OFF 状態の表示
 
 - **GIVEN** the camera is OFF
 - **WHEN** the header renders
-- **THEN** the camera button indicates OFF state
-- **AND** the preview area shows a placeholder message
+- **THEN** the camera toggle indicates OFF state
+- **AND** the preview area shows a placeholder message in a shadcn Alert or muted container
 
 ### Requirement: 画像アップロード UI
 
-The system SHALL provide a file input or button to upload a test image in the header or panel area.
+The system SHALL provide image upload and clear actions using shadcn Button components in the header.
 
 #### Scenario: アップロードボタン
 
@@ -142,16 +142,16 @@ The system SHALL provide a file input or button to upload a test image in the he
 #### Scenario: 入力モード表示
 
 - **GIVEN** image input mode is active
-- **WHEN** the header or panel renders
-- **THEN** the current input mode and file name are displayed
+- **WHEN** the header renders
+- **THEN** the current input mode and file name are displayed in a shadcn Badge
 
 ### Requirement: 初回ロード UX
 
-The system SHALL display a loading indicator while OpenCV.js is loading. Camera and upload controls SHALL be disabled until OpenCV.js loading completes or times out.
+The system SHALL display a loading indicator using shadcn-styled components while OpenCV.js is loading. Camera and upload controls SHALL be disabled until loading completes or times out.
 
 #### Scenario: 初回起動
 
 - **GIVEN** the user opens the app for the first time
 - **WHEN** OpenCV.js is loading
-- **THEN** a loading indicator is shown
+- **THEN** a loading indicator is shown over the viewport
 - **AND** camera, upload, and recognition controls are disabled until loading completes
