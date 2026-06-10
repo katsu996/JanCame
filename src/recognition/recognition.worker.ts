@@ -23,8 +23,12 @@ self.onmessage = (event: MessageEvent<WorkerInboundMessage>) => {
 
 async function handleMessage(message: WorkerInboundMessage): Promise<void> {
   if (message.type === 'init') {
-    cvModule = await loadOpenCvInWorker();
-    templates = await loadTileTemplates();
+    try {
+      cvModule = await loadOpenCvInWorker();
+      templates = await loadTileTemplates();
+    } catch (error) {
+      console.warn('[JanCame] Worker init error:', error);
+    }
     postMessage({
       type: 'ready',
       hasOpenCv: cvModule !== null,

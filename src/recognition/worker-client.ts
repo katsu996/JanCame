@@ -50,6 +50,11 @@ export class RecognitionWorkerClient {
         const message = event.data;
         if (message.type === 'ready') {
           window.clearTimeout(timeoutId);
+          if (message.templateCount === 0) {
+            this.onProgress('認識 Worker のテンプレート読み込みに失敗');
+            resolve(false);
+            return;
+          }
           this.ready = true;
           this.onProgress(
             message.hasOpenCv

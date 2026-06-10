@@ -1,7 +1,8 @@
 import type { OpenCvModule } from './opencv.d.js';
 
 /** jsDelivr 経由（docs.opencv.org より安定） */
-const OPENCV_JS_URL = 'https://cdn.jsdelivr.net/npm/@techstark/opencv-js@4.10.0/dist/opencv.js';
+const OPENCV_JS_URL =
+  'https://cdn.jsdelivr.net/npm/@techstark/opencv-js@4.9.0-release.3/dist/opencv.js';
 
 const LOAD_TIMEOUT_MS = 20_000;
 
