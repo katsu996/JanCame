@@ -191,14 +191,14 @@ export function useJanCame(): {
       shouldCapture: () =>
         stateRef.current.recognitionEnabled && inputManagerRef.current!.getActiveSource().isReady(),
       onFrame: (imageData) => {
-        processFrame(imageData);
+        processFrameRef.current(imageData);
       },
     });
     visibilityCleanupRef.current = bindVisibilityPause(frameCaptureRef.current);
-    if (state.recognitionEnabled) {
+    if (stateRef.current.recognitionEnabled) {
       frameCaptureRef.current.start();
     }
-  }, [state.recognitionEnabled, processFrame]);
+  }, []);
 
   const handleCameraToggle = useCallback(
     async (enabled: boolean) => {
@@ -227,6 +227,7 @@ export function useJanCame(): {
       try {
         await inputManagerRef.current.loadImageFile(file);
         setupFrameCapture();
+        frameCaptureRef.current?.start();
       } catch (error) {
         const message = error instanceof Error ? error.message : '画像の読み込みに失敗しました';
         updateState({ cameraError: message });
@@ -241,6 +242,15 @@ export function useJanCame(): {
     setupFrameCapture();
   }, [setupFrameCapture]);
 
+  const processFrameRef = useRef(processFrame);
+  processFrameRef.current = processFrame;
+  const setupFrameCaptureRef = useRef(setupFrameCapture);
+  setupFrameCaptureRef.current = setupFrameCapture;
+  const updateStateRef = useRef(updateState);
+  updateStateRef.current = updateState;
+  const applyRecognitionResultRef = useRef(applyRecognitionResult);
+  applyRecognitionResultRef.current = applyRecognitionResult;
+
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -249,7 +259,7 @@ export function useJanCame(): {
     inputManagerRef.current = inputManager;
 
     inputManager.onChange((mode, fileName) => {
-      updateState({ inputMode: mode, inputFileName: fileName });
+      updateStateRef.current({ inputMode: mode, inputFileName: fileName });
     });
 
     const overlay = new OverlayRenderer({
@@ -265,49 +275,55 @@ export function useJanCame(): {
 
     const recognitionWorker = new RecognitionWorkerClient({
       onResult: (_frameId, result, timingMs) => {
-        applyRecognitionResult(result, timingMs, 'worker');
+        applyRecognitionResultRef.current(result, timingMs, 'worker');
       },
       onError: (message) => {
         console.warn('[JanCame]', message);
       },
       onProgress: (message) => {
-        updateState({ loadingMessage: message });
+        updateStateRef.current({ loadingMessage: message });
       },
     });
     recognitionWorkerRef.current = recognitionWorker;
 
     const initApp = async () => {
-      updateState({ loading: true, loadingMessage: '認識エンジンを初期化中...' });
+      updateStateRef.current({ loading: true, loadingMessage: '認識エンジンを初期化中...' });
 
-      templatesRef.current = await loadTileTemplates();
+      try {
+        templatesRef.current = await loadTileTemplates();
 
-      useWorkerRef.current = await recognitionWorker.init();
-      if (!useWorkerRef.current) {
-        updateState({ loadingMessage: 'OpenCV.js を読み込み中...' });
-        cvModuleRef.current = await loadOpenCv((message) => {
-          updateState({ loadingMessage: message });
-        });
+        useWorkerRef.current = await recognitionWorker.init();
+        if (!useWorkerRef.current) {
+          updateStateRef.current({ loadingMessage: 'OpenCV.js を読み込み中...' });
+          cvModuleRef.current = await loadOpenCv((message) => {
+            updateStateRef.current({ loadingMessage: message });
+          });
+        }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : '初期化エラー';
+        updateStateRef.current({ loading: false, cameraError: message, controlsEnabled: true });
+        return;
       }
 
-      updateState({ loading: false, controlsEnabled: true });
+      updateStateRef.current({ loading: false, controlsEnabled: true });
 
       try {
         await inputManager.camera.start();
         roiQuadRef.current = defaultRoiQuad(1280, 720);
-        setupFrameCapture();
-        updateState({ cameraEnabled: true });
+        setupFrameCaptureRef.current();
+        updateStateRef.current({ cameraEnabled: true });
       } catch (error) {
         const message = inputManager.camera.getCameraErrorMessage(error);
-        updateState({ cameraError: message, cameraEnabled: false });
+        updateStateRef.current({ cameraError: message, cameraEnabled: false });
       }
 
-      updateState({ offline: !navigator.onLine });
+      updateStateRef.current({ offline: !navigator.onLine });
     };
 
     void initApp();
 
-    const onlineHandler = () => updateState({ offline: false });
-    const offlineHandler = () => updateState({ offline: true });
+    const onlineHandler = () => updateStateRef.current({ offline: false });
+    const offlineHandler = () => updateStateRef.current({ offline: true });
     window.addEventListener('online', onlineHandler);
     window.addEventListener('offline', offlineHandler);
 
@@ -319,7 +335,7 @@ export function useJanCame(): {
       visibilityCleanupRef.current?.();
       inputManager.camera.stop();
     };
-  }, [setupFrameCapture, updateState, applyRecognitionResult]);
+  }, []);
 
   useEffect(() => {
     let running = true;

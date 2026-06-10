@@ -48,7 +48,6 @@ export class FrameCapture {
   }
 
   private captureFrame(): void {
-    if (!this.shouldCapture()) return;
     if (document.visibilityState === 'hidden') return;
     if (!this.source.isReady()) return;
 
@@ -59,11 +58,14 @@ export class FrameCapture {
     this.canvas.height = height;
     if (!this.source.drawFrame(this.context, width, height)) return;
 
+    // Always update preview canvas regardless of shouldCapture
     if (this.previewCanvas && this.previewContext) {
       this.previewCanvas.width = width;
       this.previewCanvas.height = height;
       this.previewContext.drawImage(this.canvas, 0, 0);
     }
+
+    if (!this.shouldCapture()) return;
 
     const imageData = this.context.getImageData(0, 0, width, height);
     this.frameId++;
