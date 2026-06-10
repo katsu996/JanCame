@@ -380,6 +380,9 @@ export function useJanCame(): {
     setRecognitionEnabled: (enabled) => {
       updateState({ recognitionEnabled: enabled });
       if (enabled) {
+        if (!frameCaptureRef.current) {
+          setupFrameCapture();
+        }
         frameCaptureRef.current?.start();
       } else {
         frameCaptureRef.current?.stop();

@@ -2,7 +2,7 @@ import type { OpenCvModule } from './opencv.d.js';
 
 const OPENCV_JS_URL =
   'https://cdn.jsdelivr.net/npm/@techstark/opencv-js@4.9.0-release.3/dist/opencv.js';
-const LOAD_TIMEOUT_MS = 20_000;
+const LOAD_TIMEOUT_MS = 10_000;
 
 function isOpenCvReady(cv: unknown): cv is OpenCvModule {
   return (

@@ -44,7 +44,7 @@ export class RecognitionWorkerClient {
       const timeoutId = window.setTimeout(() => {
         this.onProgress('認識 Worker の初期化がタイムアウトしました');
         resolve(false);
-      }, 20_000);
+      }, 5_000);
 
       this.worker.onmessage = (event: MessageEvent<WorkerOutboundMessage>) => {
         const message = event.data;

@@ -90,27 +90,27 @@ export function generateTileTemplates(): TileTemplate[] {
 }
 
 export async function loadTileTemplates(): Promise<TileTemplate[]> {
-  const templates: TileTemplate[] = [];
-  let assetCount = 0;
+  const assetMap = new Map<string, TileTemplate>();
 
-  for (const id of ALL_TILES) {
-    const assetTemplate = await loadAssetTemplate(id);
-    if (assetTemplate) {
-      templates.push(assetTemplate);
-      assetCount++;
-      continue;
-    }
-
-    templates.push({
-      id,
-      canvas: drawGeneratedTemplate(id),
-      source: 'generated',
-    });
+  const uniqueIds = [...new Set(ALL_TILES)];
+  const assetResults = await Promise.all(
+    uniqueIds.map(async (id) => ({ id, result: await loadAssetTemplate(id) })),
+  );
+  for (const { id, result } of assetResults) {
+    if (result) assetMap.set(id, result);
   }
 
-  if (assetCount < ALL_TILES.length) {
+  const assetCount = assetMap.size;
+
+  const templates: TileTemplate[] = ALL_TILES.map((id) => {
+    const asset = assetMap.get(id);
+    if (asset) return asset;
+    return { id, canvas: drawGeneratedTemplate(id), source: 'generated' as const };
+  });
+
+  if (assetCount < uniqueIds.length) {
     console.warn(
-      `[JanCame] Tile template assets incomplete (${assetCount}/${ALL_TILES.length}). Using generated fallback for missing tiles.`,
+      `[JanCame] Tile template assets incomplete (${assetCount}/${uniqueIds.length} unique). Using generated fallback for missing tiles.`,
     );
   }
 
